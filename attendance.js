@@ -1,3 +1,8 @@
+function authorizeOnce() {
+  UrlFetchApp.fetch("https://www.google.com");
+}
+
+
 function doGet(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var id = e.parameter.id;
@@ -140,18 +145,33 @@ function sendQrEmail(e) {
 
   var subject = "Your Attendance QR Code";
 
-  var body =
-    "Hi " + name + ",\n\n" +
-    "This is your personal QR code for attendance.\n\n" +
-    "Date Sent: " + formattedDate + "\n\n" +
-    "Please scan this QR during the event.\n\n" +
-    "QR Code:\n" + qrUrl + "\n\n" +
-    "Regards,\nEvent Team";
+// Fetch QR as image blob
+  var qrBlob = UrlFetchApp.fetch(qrUrl)
+    .getBlob()
+    .setName("attendance_qr.png");
 
-  MailApp.sendEmail(email, subject, body);
+  var htmlBody =
+    "<p>Hi " + name + ",</p>" +
+    "<p>This is your personal QR code for attendance.</p>" +
+    "<p><b>Date Sent:</b> " + formattedDate + "</p>" +
+    "<p>Please scan this QR during the event:</p>" +
+    '<img src="cid:qrImage" width="220" height="220">' +
+    "<p>Regards,<br>Event Team</p>";
+
+  MailApp.sendEmail({
+    to: email,
+    subject: subject,
+    htmlBody: htmlBody,
+    inlineImages: {
+      qrImage: qrBlob
+    }
+  });
+
 
   // Mark mail as sent
   sheet.getRange(row, 10).setValue("YES");
   sheet.getRange(row, 11).setValue(formattedDate);
 
 }
+
+
