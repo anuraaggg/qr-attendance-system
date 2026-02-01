@@ -13,13 +13,16 @@ function doGet(e) {
 
   // Logged-in user email
   var userEmail = Session.getActiveUser().getEmail();
-  var allowedEmail = "anuraagshnkr@gmail.com";
+  var allowedEmails = [
+    "anuraagshnkr@gmail.com",
+    "jefreyjose4605@gmail.com"
+  ];
 
   if (!userEmail) {
-    return bigMessage("Please sign in with your Google account", "#f39c12");
+    return bigMessage("Unauthorized Access", "#f39c12");
   }
 
-  if (userEmail !== allowedEmail) {
+  if (!allowedEmails.includes(userEmail)) {
     return bigMessage("Unauthorized Access", "#e74c3c");
   }
 
@@ -125,13 +128,13 @@ function sendQrEmail(e) {
   // Generate QR URL
   var qrUrl =
     "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
-    "https://script.google.com/macros/s/AKfycbyWFwCaBau1rcom9VXpQxkIp5ayxkMhOYEmpPa2j8YGOohT-zfwZf8rWkj58k09HwlOtQ/exec?id=" +
+    "https://script.google.com/macros/s/AKfycbz3j6SOlu8gc24eYwV5mUR8uMsuMIYdFeyNtPJr85abe9slInmGssV7JLB7rfqsK-IryQ/exec?id=" +
     id;
 
   // Put QR image formula in QR_Code column (I)
   var qrFormula =
     '=IMAGE("https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' +
-    'https://script.google.com/macros/s/AKfycbyWFwCaBau1rcom9VXpQxkIp5ayxkMhOYEmpPa2j8YGOohT-zfwZf8rWkj58k09HwlOtQ/exec?id=' +
+    'https://script.google.com/macros/s/AKfycbz3j6SOlu8gc24eYwV5mUR8uMsuMIYdFeyNtPJr85abe9slInmGssV7JLB7rfqsK-IryQ/exec?id=' +
     id + '")';
 
   sheet.getRange(row, 9).setFormula(qrFormula);
@@ -173,5 +176,3 @@ function sendQrEmail(e) {
   sheet.getRange(row, 11).setValue(formattedDate);
 
 }
-
-
