@@ -36,7 +36,9 @@ Google Apps Script solution for automated QR-based attendance tracking with emai
 
 5. **Deploy as Web App** – Deploy → New deployment → Web app
    - **Execute as:** Your user account (the account running the script)
-   - **Who has access:** Anyone
+   - **Who has access:** Anyone with a Google account
+   
+   ⚠️ **Important:** Must use "Anyone with a Google account" (not "Anyone") so that `Session.getActiveUser().getEmail()` can identify and authorize the scanner
 
 6. **Update QR Generation URLs** – The QR codes need to point to your deployed web app. Replace the deployment URL in **2 locations**:
    - Line 122-124: In the `qrUrl` variable
