@@ -2,6 +2,13 @@
 
 Google Apps Script solution for automated QR-based attendance tracking with email delivery and admin authentication.
 
+## Prerequisites
+
+- A Google Account (free)
+- Access to Google Sheets and Gmail
+- A Google Drive folder for your scripts
+- Basic familiarity with Google Apps Script interface
+
 ## Features
 
 - Automatic QR code generation and email delivery per participant
@@ -16,6 +23,16 @@ Google Apps Script solution for automated QR-based attendance tracking with emai
 - Google Sheets
 - Gmail Service (MailApp)
 - QRServer API
+
+## Project Structure
+
+```
+qr-attendance-system/
+├── attendance.js          # Main Google Apps Script
+└── README.md              # Documentation
+```
+
+**To use:** Copy contents of `attendance.js` into Google Apps Script editor (Extensions → Apps Script in Google Sheets).
 
 ## How It Works
 
@@ -54,6 +71,35 @@ Google Apps Script solution for automated QR-based attendance tracking with emai
 ## Use Cases
 
 College events, workshops, hackathons, conferences, training programs
+
+## Troubleshooting
+
+### QR codes not sending
+- Check trigger is set up correctly (Extensions → Triggers)
+- Verify Gmail API permissions are granted
+- Ensure participant email addresses are valid
+- Manually run `sendQrEmail()` from Apps Script editor to test
+
+### Attendance marking fails with authentication error
+- Verify web app is deployed as "Anyone with a Google account" (not "Anyone")
+- Ensure authorized admin email matches `CONFIG.ALLOWED_EMAILS`
+- Confirm you're logged into Google with an authorized account
+
+### Duplicate attendance entries
+- Check if QR code was scanned multiple times
+- Clear attendance records and rescan if needed
+
+### "Need to authorize" message
+- Go to Apps Script editor, select `sendQrEmail` function, and run it
+- Google will prompt for authorization—grant all permissions
+
+## Limitations
+
+- Single authorized scanner (extendable for multiple admins)
+- No built-in analytics or reporting interface
+- QR codes don't expire (security consideration)
+- Requires manual Google account login for attendance marking
+- Limited to Google Sheets storage (performance may vary with large datasets)
 
 ## Future Improvements
 
