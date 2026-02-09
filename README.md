@@ -16,6 +16,10 @@ Google Apps Script solution for automated QR-based attendance tracking with emai
 - Duplicate attendance prevention
 - Timestamp logging in `dd-MM-yy HH:mm` format
 - Google Sheets as backend database
+- **NEW:** Attendance dashboard with live statistics
+- **NEW:** Detailed attendance report view
+- **NEW:** Reset attendance functionality for corrections
+- **NEW:** Bulk resend QR codes to participants
 
 ## Tech Stack
 
@@ -40,6 +44,53 @@ qr-attendance-system/
 2. QR code auto-generated and emailed to each participant
 3. Admin scans QR code during event (requires authorized Google login)
 4. System validates authentication and marks attendance with timestamp
+
+## Admin Features
+
+### Dashboard
+View real-time attendance statistics:
+- Total participants
+- Number attended
+- Pending attendance count
+- Overall attendance rate percentage
+
+**Access:** In your web app URL, add `?action=dashboard`
+```
+https://your-web-app-url/exec?action=dashboard
+```
+
+### Detailed Report
+View complete attendance list with participant details:
+- ID, Name, Status (Present/Absent)
+- Exact timestamp when attendance was marked
+- Summary statistics (attended, absent, rate)
+
+**Access:** In your web app URL, add `?action=report`
+```
+https://your-web-app-url/exec?action=report
+```
+
+### Reset Attendance
+Manually reset attendance for a participant if marked incorrectly.
+
+**From Apps Script Editor:** Run function `resetAttendance` with participant ID
+
+**Via URL Parameter:**
+```
+https://your-web-app-url/exec?action=reset&id=PARTICIPANT_ID
+```
+
+### Resend QR Codes
+Resend QR codes to participants who didn't receive them.
+
+**To resend to all who didn't receive:**
+1. Go to Apps Script Editor (Extensions → Apps Script)
+2. Select function `resendQRToMissing` from dropdown
+3. Click "Run" (▶ icon)
+4. Authorize when prompted
+5. Check logs for how many were resent
+
+**Note:** Resets the MAIL_SENT status and sends fresh QR codes to participants without successful delivery
 
 ## Setup
 
@@ -68,6 +119,19 @@ qr-attendance-system/
 - Google account authentication required
 - No direct participant data editing via web app
 
+## Quick Reference - URLs
+
+Save these URLs for quick access:
+
+| Feature | URL |
+|---------|-----|
+| Scan QR | `{WEB_APP_URL}?id=PARTICIPANT_ID` |
+| Dashboard | `{WEB_APP_URL}?action=dashboard` |
+| Report | `{WEB_APP_URL}?action=report` |
+| Reset ID | `{WEB_APP_URL}?action=reset&id=PARTICIPANT_ID` |
+
+*Replace `{WEB_APP_URL}` with your deployed web app URL*
+
 ## Use Cases
 
 College events, workshops, hackathons, conferences, training programs
@@ -93,11 +157,32 @@ College events, workshops, hackathons, conferences, training programs
 - Go to Apps Script editor, select `sendQrEmail` function, and run it
 - Google will prompt for authorization—grant all permissions
 
+## Troubleshooting New Features
+
+### Dashboard shows "0" for all statistics
+- Ensure at least one participant row is in the sheet (after header)
+- Dashboard should refresh automatically with correct data
+
+### Attendance Report is empty
+- Confirm participant has been added to the sheet
+- Check that participant ID column is not empty
+
+### Reset Attendance doesn't work
+- Verify you're logged in with an authorized admin email
+- Ensure participant ID matches exactly (including case sensitivity)
+- Try resetting via Apps Script Editor instead of URL
+
+### QR Codes not resending
+- Run `resendQRToMissing()` from Apps Script Editor and check logs
+- Verify email addresses are valid in participant sheet
+- Ensure trigger is still set up (Extensions → Triggers)
+
 ## Limitations
 
-- Single authorized scanner (extendable for multiple admins)
-- No built-in analytics or reporting interface
+- Single authorized scanner (extendable for multiple admins by adding emails to `CONFIG.ALLOWED_EMAILS`)
+- Manual reset required for incorrectly marked attendance (now available via UI or URL)
 - QR codes don't expire (security consideration)
+- Dashboard and reports are read-only (for admin viewing only)
 - Requires manual Google account login for attendance marking
 - Limited to Google Sheets storage (performance may vary with large datasets)
 
