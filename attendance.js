@@ -71,6 +71,8 @@ function doGet(e) {
       return reportView();
     } else if (action === "reset" && e.parameter.id) {
       return resetAttendance(e.parameter.id);
+    } else if (action === "export") {
+      return exportToCSV();
     } else {
       // Default: QR code scan
       return handleQRScan(e);
@@ -445,6 +447,9 @@ function dashboardView() {
             <button class="btn-primary" onclick="window.location.href=window.location.href.split('?')[0] + '?action=report';">
               View Detailed Report
             </button>
+            <button class="btn-primary" onclick="window.location.href=window.location.href.split('?')[0] + '?action=export';">
+              ⬇ Download CSV
+            </button>
             <button class="btn-secondary" onclick="alert('Please refresh from Google Sheets');">
               Back to Apps Script
             </button>
@@ -618,12 +623,93 @@ function reportView() {
               <div class="footer-stat-value" style="color: #3498db;">${attendanceRate}%</div>
             </div>
           </div>
+          
+          <div style="display: flex; gap: 10px; margin-top: 30px; padding: 0 30px;">
+            <button style="flex: 1; padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'" onclick="window.location.href=window.location.href.split('?')[0] + '?action=export';">
+              ⬇ Download as CSV
+            </button>
+            <button style="flex: 1; padding: 12px 20px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'" onclick="window.location.href=window.location.href.split('?')[0] + '?action=dashboard';">
+              ← Back to Dashboard
+            </button>
+          </div>
         </div>
       </body>
     </html>
   `;
   
   return HtmlService.createHtmlOutput(html);
+}
+
+/**
+ * Export attendance to CSV format
+ */
+function exportToCSV() {
+  try {
+    var userEmail = normalizeEmail(Session.getActiveUser().getEmail());
+    
+    // Check if user is authorized
+    var isAuthorized = CONFIG.ALLOWED_EMAILS.some(function(email) {
+      return normalizeEmail(email) === userEmail;
+    });
+    
+    if (!isAuthorized) {
+      logEvent("Unauthorized export attempt from: " + userEmail);
+      return bigMessage("Unauthorized - Admin access required", "#e74c3c");
+    }
+    
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = sheet.getDataRange().getValues();
+    
+    // CSV Headers
+    var headers = ["ID", "Name", "Email", "Phone", "College", "City", "State", "Team Count", "Mail Sent", "Date Sent", "Attendance Status", "Timestamp"];
+    var csvContent = [headers.map(function(h) { return '"' + h + '"'; }).join(",")];
+    
+    // Add data rows
+    for (var i = 1; i < data.length; i++) {
+      var rowData = [
+        data[i][COLUMNS.ID - 1] || "",
+        data[i][COLUMNS.NAME - 1] || "",
+        data[i][COLUMNS.EMAIL - 1] || "",
+        data[i][COLUMNS.PHONE - 1] || "",
+        data[i][COLUMNS.COLLEGE - 1] || "",
+        data[i][COLUMNS.CITY - 1] || "",
+        data[i][COLUMNS.STATE - 1] || "",
+        data[i][COLUMNS.TEAM_COUNT - 1] || "",
+        data[i][COLUMNS.MAIL_SENT - 1] || "",
+        data[i][COLUMNS.DATE_SENT - 1] || "",
+        (data[i][COLUMNS.MAIL_SENT - 1] || "").toString().trim().toUpperCase() === "YES" && (data[i][COLUMNS.TIMESTAMP - 1] || "").toString().trim() !== "" ? "Present" : "Absent",
+        data[i][COLUMNS.TIMESTAMP - 1] || ""
+      ];
+      
+      // Escape quotes and wrap in quotes
+      var escapedRow = rowData.map(function(cell) {
+        var str = cell.toString();
+        str = str.replace(/"/g, '""'); // Escape quotes by doubling them
+        return '"' + str + '"';
+      });
+      
+      csvContent.push(escapedRow.join(","));
+    }
+    
+    var csv = csvContent.join("\n");
+    
+    // Generate filename with timestamp
+    var now = new Date();
+    var timestamp = Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd_HH-mm-ss");
+    var filename = "attendance_report_" + timestamp + ".csv";
+    
+    logEvent("CSV export generated: " + filename);
+    
+    // Return as downloadable file
+    return ContentService
+      .createTextOutput(csv)
+      .setMimeType(ContentService.MimeType.CSV)
+      .downloadAsFile(filename);
+      
+  } catch (error) {
+    logEvent("Error in exportToCSV: " + error.toString());
+    return bigMessage("Export Error", "#e74c3c");
+  }
 }
 
 /**

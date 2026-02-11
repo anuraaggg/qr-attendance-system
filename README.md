@@ -20,6 +20,7 @@ Google Apps Script solution for automated QR-based attendance tracking with emai
 - **NEW:** Detailed attendance report view
 - **NEW:** Reset attendance functionality for corrections
 - **NEW:** Bulk resend QR codes to participants
+- **NEW:** Export attendance to CSV for analysis
 
 ## Tech Stack
 
@@ -91,6 +92,26 @@ Resend QR codes to participants who didn't receive them.
 5. Check logs for how many were resent
 
 **Note:** Resets the MAIL_SENT status and sends fresh QR codes to participants without successful delivery
+
+### Export to CSV
+Download all attendance data as a CSV file for further analysis in Excel, Google Sheets, or other tools.
+
+**Features:**
+- Exports all participant information (ID, Name, Email, Phone, College, City, State, Team Count)
+- Includes email delivery status and timestamps
+- Automatically calculates attendance status (Present/Absent)
+- Filename includes timestamp for easy organization
+
+**Access:** 
+- Click "Download CSV" button in Dashboard or Report view, OR
+- Direct URL: `https://your-web-app-url/exec?action=export`
+
+**CSV Columns:**
+- ID, Name, Email, Phone, College, City, State, Team Count
+- Mail Sent (YES/blank)
+- Date Sent
+- Attendance Status (Present/Absent)
+- Timestamp (exact time marked)
 
 ## Setup
 
