@@ -17,7 +17,7 @@ Google Apps Script solution for automated QR-based attendance tracking with emai
 - Timestamp logging in `dd-MM-yy HH:mm` format
 - Google Sheets as backend database
 - **NEW:** Attendance dashboard with live statistics
-- **NEW:** Detailed attendance report view
+- **NEW:** Detailed attendance report with search & filter
 - **NEW:** Reset attendance functionality for corrections
 - **NEW:** Bulk resend QR codes to participants
 - **NEW:** Export attendance to CSV for analysis
@@ -65,6 +65,14 @@ View complete attendance list with participant details:
 - ID, Name, Status (Present/Absent)
 - Exact timestamp when attendance was marked
 - Summary statistics (attended, absent, rate)
+
+**Search & Filter:**
+- Search by ID, Name, or Email (real-time filtering)
+- Filter by Attendance Status:
+  - All (default)
+  - ✓ Present
+  - ○ Absent
+- "Clear Filters" button to reset and view all records
 
 **Access:** In your web app URL, add `?action=report`
 ```

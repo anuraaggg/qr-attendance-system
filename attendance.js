@@ -477,30 +477,36 @@ function reportView() {
   for (var i = 1; i < data.length; i++) {
     var id = data[i][COLUMNS.ID - 1] || "";
     var name = data[i][COLUMNS.NAME - 1] || "";
+    var email = data[i][COLUMNS.EMAIL - 1] || "";
     var status = (data[i][COLUMNS.MAIL_SENT - 1] || "").toString().trim().toUpperCase();
     var timestamp = data[i][COLUMNS.TIMESTAMP - 1] || "Not marked";
-    var statusBadge = status === "YES" && timestamp !== "Not marked" ? "✓ Present" : "○ Absent";
-    var statusColor = status === "YES" && timestamp !== "Not marked" ? "#2ecc71" : "#e74c3c";
+    var isPresent = status === "YES" && timestamp !== "Not marked";
+    var statusBadge = isPresent ? "✓ Present" : "○ Absent";
+    var statusColor = isPresent ? "#2ecc71" : "#e74c3c";
     
-    if (status === "YES" && timestamp !== "Not marked") {
+    if (isPresent) {
       attended++;
     }
     
     rows.push({
       id: id,
       name: name,
+      email: email,
       status: statusBadge,
       statusColor: statusColor,
-      timestamp: timestamp
+      timestamp: timestamp,
+      isPresent: isPresent
     });
   }
   
   var total = data.length - 1;
   var attendanceRate = total > 0 ? Math.round((attended / total) * 100) : 0;
   
-  var tableRows = rows.map(function(row) {
+  var rowsJSON = JSON.stringify(rows);
+  
+  var tableRows = rows.map(function(row, index) {
     return `
-      <tr>
+      <tr data-id="${row.id}" data-name="${row.name}" data-email="${row.email}" data-present="${row.isPresent}" data-index="${index}">
         <td>${row.id}</td>
         <td>${row.name}</td>
         <td><span style="color: ${row.statusColor}; font-weight: bold;">${row.status}</span></td>
@@ -541,6 +547,62 @@ function reportView() {
             opacity: 0.9;
             font-size: 16px;
           }
+          .filter-section {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+          }
+          .filter-group {
+            flex: 1;
+            min-width: 200px;
+          }
+          .filter-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+          }
+          .filter-group input,
+          .filter-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+          }
+          .filter-group input:focus,
+          .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          }
+          .clear-btn {
+            padding: 10px 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+          }
+          .clear-btn:hover {
+            background: #c0392b;
+          }
+          .result-count {
+            padding: 10px 30px;
+            background: #f8f9fa;
+            font-size: 14px;
+            color: #666;
+            border-bottom: 1px solid #e0e0e0;
+          }
           table {
             width: 100%;
             border-collapse: collapse;
@@ -559,6 +621,15 @@ function reportView() {
           }
           tr:hover {
             background: #f8f9fa;
+          }
+          tr.hidden {
+            display: none;
+          }
+          .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 16px;
           }
           .footer-stats {
             background: #f8f9fa;
@@ -583,6 +654,48 @@ function reportView() {
             color: #333;
           }
         </style>
+        <script>
+          var allRows = ${rowsJSON};
+          
+          function filterTable() {
+            var searchText = document.getElementById('searchInput').value.toLowerCase();
+            var statusFilter = document.getElementById('statusFilter').value;
+            var tableRows = document.querySelectorAll('tbody tr');
+            var visibleCount = 0;
+            
+            tableRows.forEach(function(row) {
+              var id = row.getAttribute('data-id').toLowerCase();
+              var name = row.getAttribute('data-name').toLowerCase();
+              var email = row.getAttribute('data-email').toLowerCase();
+              var isPresent = row.getAttribute('data-present') === 'true';
+              
+              var matchesSearch = id.includes(searchText) || name.includes(searchText) || email.includes(searchText);
+              var matchesStatus = statusFilter === 'all' || (statusFilter === 'present' && isPresent) || (statusFilter === 'absent' && !isPresent);
+              
+              if (matchesSearch && matchesStatus) {
+                row.classList.remove('hidden');
+                visibleCount++;
+              } else {
+                row.classList.add('hidden');
+              }
+            });
+            
+            var noResults = document.getElementById('noResults');
+            if (visibleCount === 0) {
+              noResults.style.display = 'block';
+            } else {
+              noResults.style.display = 'none';
+            }
+            
+            document.getElementById('resultCount').textContent = 'Showing ' + visibleCount + ' of ' + tableRows.length + ' records';
+          }
+          
+          function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = 'all';
+            filterTable();
+          }
+        </script>
       </head>
       <body>
         <div class="container">
@@ -590,6 +703,24 @@ function reportView() {
             <h1>📋 Attendance Report</h1>
             <p>Generated on ${new Date().toLocaleString()}</p>
           </div>
+          
+          <div class="filter-section">
+            <div class="filter-group" style="flex: 2;">
+              <label for="searchInput">🔍 Search (ID, Name, or Email)</label>
+              <input type="text" id="searchInput" placeholder="Type to search..." onkeyup="filterTable()">
+            </div>
+            <div class="filter-group">
+              <label for="statusFilter">Status</label>
+              <select id="statusFilter" onchange="filterTable()">
+                <option value="all">All</option>
+                <option value="present">✓ Present</option>
+                <option value="absent">○ Absent</option>
+              </select>
+            </div>
+            <button class="clear-btn" onclick="clearFilters()">Clear Filters</button>
+          </div>
+          
+          <div class="result-count" id="resultCount">Showing ${rows.length} of ${rows.length} records</div>
           
           <table>
             <thead>
@@ -604,6 +735,10 @@ function reportView() {
               ${tableRows}
             </tbody>
           </table>
+          
+          <div class="no-results" id="noResults" style="display: none;">
+            No results found. Try adjusting your search or filters.
+          </div>
           
           <div class="footer-stats">
             <div class="footer-stat">
@@ -624,7 +759,7 @@ function reportView() {
             </div>
           </div>
           
-          <div style="display: flex; gap: 10px; margin-top: 30px; padding: 0 30px;">
+          <div style="display: flex; gap: 10px; margin-top: 30px; padding: 0 30px; margin-bottom: 30px;">
             <button style="flex: 1; padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'" onclick="window.location.href=window.location.href.split('?')[0] + '?action=export';">
               ⬇ Download as CSV
             </button>
