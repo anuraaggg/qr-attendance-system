@@ -1,3 +1,12 @@
+var CONFIG = {
+  WEB_APP_URL: "https://script.google.com/macros/s/AKfycbz3j6SOlu8gc24eYwV5mUR8uMsuMIYdFeyNtPJr85abe9slInmGssV7JLB7rfqsK-IryQ/exec",
+  ALLOWED_EMAILS: [
+    "anuraagshnkr@gmail.com",
+    "jefreyjose4605@gmail.com"
+  ]
+};
+
+
 function authorizeOnce() {
   UrlFetchApp.fetch("https://www.google.com");
 }
@@ -12,17 +21,13 @@ function doGet(e) {
   }
 
   // Logged-in user email
-  var userEmail = Session.getActiveUser().getEmail();
-  var allowedEmails = [
-    "anuraagshnkr@gmail.com",
-    "jefreyjose4605@gmail.com"
-  ];
+  var userEmail = (Session.getActiveUser().getEmail() || "").trim().toLowerCase();
 
   if (!userEmail) {
     return bigMessage("Unauthorized Access", "#f39c12");
   }
 
-  if (!allowedEmails.includes(userEmail)) {
+  if (!CONFIG.ALLOWED_EMAILS.includes(userEmail)) {
     return bigMessage("Unauthorized Access", "#e74c3c");
   }
 
@@ -32,7 +37,7 @@ function doGet(e) {
     if (data[i][0].toString() === id.toString()) {
 
       // Present column (I)
-      if (data[i][8] === "YES") {
+      if ((data[i][8] || "").toString().trim().toUpperCase() === "YES") {
         return bigMessage("Attendance Already Marked", "#3498db");
       }
 
@@ -115,7 +120,7 @@ function sendQrEmail(e) {
   var mailSent  = sheet.getRange(row, 10).getValue(); // J
 
   // Stop if mail already sent
-  if (mailSent === "YES") return;
+  if ((mailSent || "").toString().trim().toUpperCase() === "YES") return;
 
   // Stop if ANY required field is missing
   if (
@@ -128,13 +133,13 @@ function sendQrEmail(e) {
   // Generate QR URL
   var qrUrl =
     "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
-    "https://script.google.com/macros/s/AKfycbz3j6SOlu8gc24eYwV5mUR8uMsuMIYdFeyNtPJr85abe9slInmGssV7JLB7rfqsK-IryQ/exec?id=" +
+    CONFIG.WEB_APP_URL + "?id=" +
     id;
 
   // Put QR image formula in QR_Code column (I)
   var qrFormula =
     '=IMAGE("https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' +
-    'https://script.google.com/macros/s/AKfycbz3j6SOlu8gc24eYwV5mUR8uMsuMIYdFeyNtPJr85abe9slInmGssV7JLB7rfqsK-IryQ/exec?id=' +
+    CONFIG.WEB_APP_URL + '?id=' +
     id + '")';
 
   sheet.getRange(row, 9).setFormula(qrFormula);
