@@ -30,9 +30,9 @@ Google Apps Script solution for automated QR-based attendance tracking with emai
 
 2. **Open Apps Script** (Extensions → Apps Script) and paste `attendance.js`
 
-3. **Configure Admin Email** – Update `allowedEmail` variable in the script
+3. **Configure Admin Emails** – Update `CONFIG.ALLOWED_EMAILS` in `attendance.js`
 
-4. **Set Up Trigger** – Add trigger: Function `sendQrEmail`, Event source: From spreadsheet, Event type: On change
+4. **Set Up Trigger** – Add trigger: Function `sendQrEmail`, Event source: From spreadsheet, Event type: On edit
 
 5. **Deploy as Web App** – Deploy → New deployment → Web app
    - **Execute as:** Your user account (the account running the script)
@@ -40,11 +40,7 @@ Google Apps Script solution for automated QR-based attendance tracking with emai
    
    ⚠️ **Important:** Must use "Anyone with a Google account" (not "Anyone") so that `Session.getActiveUser().getEmail()` can identify and authorize the scanner
 
-6. **Update QR Generation URLs** – The QR codes need to point to your deployed web app. Replace the deployment URL in **2 locations**:
-   - Line 122-124: In the `qrUrl` variable
-   - Line 129-131: In the `qrFormula` variable
-   
-   Replace `https://script.google.com/macros/s/AKfycbyWFwCaBau1rcom9VXpQxkIp5ayxkMhOYEmpPa2j8YGOohT-zfwZf8rWkj58k09HwlOtQ/exec` with your actual deployed Web App URL
+6. **Update Web App URL** – Set your deployed web app URL in `CONFIG.WEB_APP_URL` inside `attendance.js` (single location)
 
 7. **Grant Permissions** – Authorize access to Google Sheets, Gmail, and external services
 
